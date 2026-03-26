@@ -1,7 +1,9 @@
 ---
-title: "hello"
+title: "Fintech533 Pairs Trading"
 ---
 
-This is a Quarto website.
+Welcome to my Quarto website for Fintech 533.
 
-To learn more about Quarto websites visit <https://quarto.org/docs/websites>.
+![](images/screen.png){width=40%}
+
+This site is for practicing GitHub Pages and Quarto.
