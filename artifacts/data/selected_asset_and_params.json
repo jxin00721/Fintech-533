@@ -1,0 +1,8 @@
+{
+  "selected_asset": "XLE",
+  "breakout_lookback": 20,
+  "atr_window": 14,
+  "stop_loss_atr_multiple": 2.0,
+  "profit_target_atr_multiple": 2.0,
+  "max_hold_days": 15
+}

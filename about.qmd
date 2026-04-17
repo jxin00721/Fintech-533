@@ -1,5 +1,40 @@
 ---
-title: "About"
+title: "Methodology and Files"
 ---
 
-About this site
+# Methodology and Files
+
+This project was built in two workspaces:
+
+- Analysis and backtest code: `/Users/jinxin/Desktop/Fintech 533`
+- Public website: `/Users/jinxin/Desktop/my-website`
+
+## File Layout
+
+Main analysis outputs:
+
+- `Breakout_Strategy_Assignment.ipynb`
+- `breakout_strategy_assignment.py`
+- `breakout_blotter.csv`
+- `breakout_ledger.csv`
+- `breakout_walkforward_windows.csv`
+
+Website artifacts:
+
+- `artifacts/data/*`
+- `artifacts/tables/*`
+- `artifacts/plots/*`
+
+## Replication Workflow
+
+1. Run the analysis script or notebook in the `Fintech 533` folder.
+2. The pipeline tries `shinybroker` first for historical data and falls back to a public Yahoo chart endpoint if no local IBKR/TWS session is available.
+3. The walk-forward backtest exports CSVs, HTML tables, and HTML charts directly into the website's `artifacts` folder.
+4. Run `quarto render` inside `my-website`.
+5. Push the updated `docs/` folder to GitHub Pages.
+
+## Notes
+
+- The breakout rule is intentionally simple so the methodology stays transparent.
+- The asset screen is based on ETFs because they provide liquid, easy-to-explain daily breakout candidates.
+- The page links on the home screen are the easiest way to download the final blotter, ledger, notebook, and script.

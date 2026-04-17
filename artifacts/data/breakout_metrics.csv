@@ -1,0 +1,9 @@
+metric,value,explanation
+Selected asset,XLE,Asset chosen after walk-forward screening across the ETF universe.
+Average return per trade,-0.5949%,Mean percentage return across all completed trades.
+Annualized Sharpe ratio,0.351,Risk-adjusted return using a 2.0% annual risk-free rate assumption.
+Max drawdown,-10.4859%,Largest peak-to-trough drop in the out-of-sample equity curve.
+Win rate,31.25%,Fraction of trades that ended with positive PnL.
+Profit factor,0.669,Gross profits divided by gross losses.
+Expectancy (USD),$-594.87,Average dollar PnL per trade.
+Number of trades,16,Completed out-of-sample trades in the stitched walk-forward test.

@@ -3,13 +3,13 @@ project:
   output-dir: docs
 
 website:
-  title: "hello"
+  title: "Fintech 533 Breakout Strategy"
   navbar:
     left:
       - href: index.qmd
-        text: Home
+        text: Breakout Report
       - href: about.qmd
-        text: About
+        text: Methodology
 
 format:
   html:
@@ -18,3 +18,4 @@ format:
       - brand
     css: styles.css
     toc: true
+    page-layout: full

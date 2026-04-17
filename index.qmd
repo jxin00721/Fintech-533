@@ -1,9 +1,115 @@
 ---
-title: "Fintech533 Pairs Trading"
+title: "Breakout Strategy Backtest"
 ---
 
-Welcome to my Quarto website for Fintech 533.
+# Breakout Trading Strategy
 
-![](images/screen.png){width=40%}
+This page presents a complete breakout trading assignment built around a long-only Donchian-style breakout rule, a rolling walk-forward backtest, a downloadable trade blotter, a daily ledger, and out-of-sample performance analysis.
 
-This site is for practicing GitHub Pages and Quarto.
+## Strategy Logic
+
+The strategy buys an asset when its closing price finishes above the highest high from the prior 20 trading days, which is intended to capture the start of a bullish trend. Trades are entered at the next day's open, risk is controlled with a stop-loss placed 2.0 ATR below the entry price, profits are taken at 2.0 ATR above the entry price, and any position that remains open for 15 trading days is closed at the next open. The backtest uses one year of training followed by one quarter of out-of-sample testing, then rolls that process forward across the sample.
+
+## Breakout Detection Function
+
+The core detection function is named `detect_breakouts`. It computes a shifted rolling high and flags a breakout only when the current close is above the highest high from the previous lookback window, which avoids look-ahead bias.
+
+```python
+def detect_breakouts(data: pd.DataFrame, breakout_lookback: int) -> pd.DataFrame:
+    breakout_frame = data.copy()
+    breakout_frame["rolling_high"] = (
+        breakout_frame["high"].rolling(window=breakout_lookback).max().shift(1)
+    )
+    breakout_frame["breakout_signal"] = (
+        breakout_frame["close"] > breakout_frame["rolling_high"]
+    ) & breakout_frame["rolling_high"].notna()
+    return breakout_frame
+```
+
+All thresholds are explicitly defined in the analysis code:
+
+- `BREAKOUT_LOOKBACK = 20` after walk-forward selection from `{10, 20, 55}`
+- `ATR_WINDOW = 14`
+- `STOP_LOSS_ATR_MULTIPLE = 2.0`
+- `PROFIT_TARGET_ATR_MULTIPLE = 2.0`
+- `MAX_HOLD_DAYS = 15`
+- `RISK_FREE_RATE = 0.02`
+
+## Asset Selection
+
+I screened the ETF universe `SPY`, `QQQ`, `IWM`, `XLE`, `GLD`, and `TLT` using a rolling walk-forward framework with 252 trading days of training and 63 trading days of out-of-sample testing. `XLE` was selected because it delivered the strongest out-of-sample Sharpe ratio in the screen. The top three assets by walk-forward Sharpe were `XLE`, `QQQ`, and `IWM`.
+
+Data retrieval is implemented with a ShinyBroker-first loader. The code first tries to request daily history through `shinybroker.fetch_historical_data(...)` so it can use a local IBKR/TWS session when one is available. In this run, there was no active local TWS connection, so the loader automatically fell back to a public Yahoo chart endpoint. That fallback is documented in the notebook and code so the workflow remains reproducible.
+
+{{< include artifacts/tables/asset_screening_table.html >}}
+
+## Breakout Definition
+
+The breakout rule is:
+
+`Close_t > max(High_{t-20}, ..., High_{t-1})`
+
+In plain English, a breakout occurs when today's closing price is above the highest daily high from the previous 20 sessions. The rolling high is shifted by one day so the strategy only uses information that would have been known at the close. ATR uses a 14-day window. The stop-loss is `entry price - 2.0 * ATR`, the profit target is `entry price + 2.0 * ATR`, and the timeout rule closes any open trade after 15 trading days.
+
+## Performance Metrics
+
+The metrics below are computed on the stitched out-of-sample ledger. The annualized Sharpe ratio assumes a `2.0%` annual risk-free rate.
+
+{{< include artifacts/tables/metrics_table.html >}}
+
+## Charts
+
+### Equity Curve
+
+<iframe src="artifacts/plots/equity_curve.html" width="100%" height="460" loading="lazy"></iframe>
+
+### Drawdown
+
+<iframe src="artifacts/plots/drawdown.html" width="100%" height="420" loading="lazy"></iframe>
+
+### Breakout Signals
+
+<iframe src="artifacts/plots/breakout_signals.html" width="100%" height="460" loading="lazy"></iframe>
+
+## Trade Outcome Analysis
+
+Every completed trade is classified into one of three mutually exclusive outcomes:
+
+- `Successful`: the close reached the profit target and the strategy exited at the next open
+- `Timed out`: the trade remained open for 15 trading days and was closed with a market order at the next open
+- `Stop-loss triggered`: the close fell to or below the stop-loss threshold and the strategy exited at the next open
+
+<iframe src="artifacts/plots/trade_outcomes.html" width="100%" height="420" loading="lazy"></iframe>
+
+## Trade Blotter and Ledger
+
+The full trade blotter and daily ledger are available as downloadable CSV files:
+
+- [Download breakout blotter CSV](artifacts/data/breakout_blotter.csv)
+- [Download breakout ledger CSV](artifacts/data/breakout_ledger.csv)
+- [Download walk-forward window summary CSV](artifacts/data/breakout_walkforward_windows.csv)
+- [Download asset screening results CSV](artifacts/data/asset_screening_results.csv)
+
+Readable versions are embedded below.
+
+{{< include artifacts/tables/trade_blotter_table.html >}}
+
+{{< include artifacts/tables/ledger_table.html >}}
+
+## Assumptions and Replication Notes
+
+- Data frequency: daily OHLCV bars
+- Strategy direction: long only
+- Position sizing: fixed notional of `$100,000` per trade, rounded down to whole shares
+- Slippage and commissions: not included
+- Risk-free rate assumption: `2.0%` annually
+- Walk-forward design: 252-day training window and 63-day out-of-sample test window
+
+The underlying analysis files are also available:
+
+- [Download the Python analysis script](artifacts/data/breakout_strategy_assignment.py)
+- [Download the Jupyter notebook](artifacts/data/Breakout_Strategy_Assignment.ipynb)
+
+## Interpretation
+
+The final out-of-sample result is mixed rather than spectacular, which is useful in its own right. `XLE` produced the best walk-forward Sharpe in the ETF screen, but the strategy still had a modest average trade return and a non-trivial drawdown. That is a realistic outcome for a simple breakout rule: the framework is transparent, easy to audit, and capable of catching trends, but it is still sensitive to whipsaws and the exact exit logic. For a future extension, I would test volume confirmation, volatility filters, and a wider asset universe.
